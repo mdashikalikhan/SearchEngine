@@ -8,7 +8,7 @@ import java.util.concurrent.Executor;
 
 @Configuration
 public class AsyncConfig {
-    @Bean(name = "branchTask")
+    @Bean(name = "branchTaskExecutor")
     public Executor branchTaskExecutor(){
         ThreadPoolTaskExecutor executor
                 = new ThreadPoolTaskExecutor();
