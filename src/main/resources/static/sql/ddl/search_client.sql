@@ -1,7 +1,7 @@
 create table search_client(
     SEARCH_KEY varchar2(500),
     CLIENTS_CODE number,
-    clientsName  varchar2(200),
+    clients_Name  varchar2(200),
     INDCLIENT_FATHER_NAME varchar2(200),
     IACLINK_ACTUAL_ACNUM varchar2(200),
     CLIENTS_PHN varchar2(50),
