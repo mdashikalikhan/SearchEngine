@@ -13,4 +13,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     nativeQuery = true)
     List<Client> findClientByBranchCodeAndClientName(@Param("branchCode") int branchCode,
                                                      @Param("clientNamePattern") String clientName);
+
+
 }

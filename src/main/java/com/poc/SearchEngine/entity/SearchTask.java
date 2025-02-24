@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -17,8 +18,8 @@ public class SearchTask {
     private String searchKey;
 
     @Column(name = "start_time")
-    private Date startTime;
+    private LocalDateTime startTime;
 
     @Column(name = "end_time")
-    private Date endTime;
+    private LocalDateTime endTime;
 }

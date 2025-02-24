@@ -3,6 +3,7 @@ package com.poc.SearchEngine.service;
 import com.poc.SearchEngine.entity.Client;
 import com.poc.SearchEngine.entity.ProcessedClient;
 import com.poc.SearchEngine.entity.SearchTask;
+import com.poc.SearchEngine.model.SearchInfoModel;
 import com.poc.SearchEngine.repository.ClientRepository;
 import com.poc.SearchEngine.repository.ProcessedClientRepository;
 import com.poc.SearchEngine.repository.SearchTaskRepository;
@@ -11,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,6 +32,28 @@ public class BranchService {
         return searchTaskRepository.findById(searchKey).orElse(null);
     }
 
+    public void deleteSearch(String searchKey){
+        processedClientRepository.deleteAllBySearchKey(searchKey);
+        searchTaskRepository.deleteBySearchKey(searchKey);
+    }
+    public SearchInfoModel getSearchInfo(String searchKey){
+        SearchTask searchTask = getSearchTask(searchKey);
+        if(searchTask==null){
+            return null;
+        }
+
+        SearchInfoModel searchInfoModel = new SearchInfoModel();
+
+        searchInfoModel.setSearchKey(searchKey);
+        searchInfoModel.setStartTime(searchTask.getStartTime()==null? null :searchTask.getStartTime());
+        searchInfoModel.setEndTime(searchTask.getEndTime()==null? null :searchTask.getEndTime());
+
+        searchInfoModel.setRecords(processedClientRepository.getTotalRecords(searchKey));
+        return searchInfoModel;
+
+
+    }
+
     @Async("branchTaskExecutor")
     public CompletableFuture<Void> processBranchAsync(Long branchId, String searchKey) {
         // Fetch clients for the branch
@@ -36,6 +62,7 @@ public class BranchService {
         );
 
         // Insert clients into the target table
+        List<ProcessedClient> processedClients = new ArrayList<>();
         for (Client client : clients) {
             ProcessedClient processedClient = new ProcessedClient();
             processedClient.setSearchKey(searchKey);
@@ -53,7 +80,11 @@ public class BranchService {
             processedClient.setClientsAddr4(client.getClientsAddr4());
             processedClient.setClientsAddr5(client.getClientsAddr5());
             processedClientRepository.save(processedClient);
+            //processedClients.add(processedClient);
         }
+
+        //Batch Insert
+        //processedClientRepository.saveAll(processedClients);
 
         return CompletableFuture.completedFuture(null);
     }

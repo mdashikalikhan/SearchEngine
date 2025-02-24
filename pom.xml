@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.poc</groupId>
 	<artifactId>SearchEngine</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<!--<version>0.0.1-SNAPSHOT</version>-->
 	<name>SearchEngine</name>
 	<description>Search Engine</description>
 	<url/>
@@ -63,6 +63,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>SearchEngine</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
