@@ -57,4 +57,28 @@ public class SearchController {
 
         }
     }
+
+    @PostMapping("/phonetic")
+    public ResponseEntity<String> allBranchSearchPhonetic(@Valid @RequestBody SearchModel searchModel) {
+        String searchKey = searchModel.getSearchKey().toUpperCase();
+
+        SearchTask searchTask = branchService.getSearchTask(searchKey);
+        if(searchTask!=null){
+            if(searchTask.getEndTime()==null){
+                return ResponseEntity.status(HttpStatus.ALREADY_REPORTED)
+                        .body("Search Operation is already started for key: " + searchKey);
+            } else{
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body("Search Operation is completed for key: " + searchKey);
+            }
+        }
+
+        try {
+            branchProcessorService.processAllBranchesPhonetic(searchKey);
+            return ResponseEntity.ok( "Search operation started for  key: " + searchKey);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error processing branches: " + e.getMessage());
+
+        }
+    }
 }

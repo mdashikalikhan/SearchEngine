@@ -85,11 +85,99 @@ public class BranchProcessorService {
                 .toList();*/
 
 
-        List<CompletableFuture<Void>> futures = allBranchIds.parallelStream()
+        /*List<CompletableFuture<Void>> futures = allBranchIds.parallelStream()
                 .map(branchId -> CompletableFuture.supplyAsync(() -> branchService.processBranchAsync(branchId, searchKey))
                         .thenCompose(f -> f))
                 .toList();
         // Wait for all tasks to complete
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();*/
+
+        ForkJoinPool customPools = new ForkJoinPool(120); // Larger pool size
+        List<CompletableFuture<Void>> futures = allBranchIds.stream()
+                .map(branchId -> CompletableFuture.supplyAsync(() -> searchKey.length() == 1 ? branchService.processBranchSingleCharacterAsync(branchId, searchKey) : branchService.processBranchAsync(branchId, searchKey), customPools)
+                        .thenCompose(f -> f))
+                .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // Update the search task with end time
+        searchTask.setEndTime(LocalDateTime.now());
+        searchTaskRepository.save(searchTask);
+    }
+
+    @Async("branchTaskExecutor") // Run this method asynchronously
+    public void processAllBranchesPhonetic(String searchKey) throws InterruptedException, ExecutionException {
+        SearchTask searchTask = new SearchTask();
+        searchTask.setSearchKey(searchKey);
+        searchTask.setStartTime(LocalDateTime.now());
+        searchTaskRepository.save(searchTask);
+
+        List<Long> allBranchIds = branchLoader.getBranchIds(); // Get preloaded branch IDs
+        /*int chunkSize = 100; // Each thread processes 100 branches
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (int i = 0; i < allBranchIds.size(); i += chunkSize) {
+            // Get a subset of branch IDs for this chunk
+            List<Long> branchIdsChunk = allBranchIds.subList(i, Math.min(i + chunkSize, allBranchIds.size()));
+
+            // Process each branch in the chunk
+            for (Long branchId : branchIdsChunk) {
+                CompletableFuture<Void> future = branchService.processBranchAsync(branchId, searchKey);
+                futures.add(future);
+            }
+        }*/
+
+
+        // Process branches in parallel using CompletableFuture
+        /*List<CompletableFuture<Void>> futures = allBranchIds.stream()
+                .map(branchId -> CompletableFuture.runAsync(() -> {
+                    branchService.processBranchAsync(branchId, searchKey);
+                }, branchTaskExecutor))
+                .toList();
+        // Wait for all threads to complete
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();*/
+
+        // Process branches in parallel using a custom ForkJoinPool
+        /*CustomForkJoinPool.executeWithCustomPool(() -> {
+            allBranchIds.parallelStream().forEach(branchId -> {
+                branchService.processBranchAsync(branchId, searchKey);
+            });
+        });*/
+
+        ForkJoinPool customPool = CustomForkJoinPool.getCustomPool();
+        /*List<CompletableFuture<Void>> futures = allBranchIds.stream()
+                .map(branchId -> CompletableFuture.runAsync(() -> {
+                    branchService.processBranchAsync(branchId, searchKey).join();
+                }, customPool))
+                .toList();*/
+
+        /*List<CompletableFuture<Void>> futures = allBranchIds.stream()
+                .map(branchId -> CompletableFuture.runAsync(() ->
+                                branchService.processBranchAsync(branchId, searchKey) // Call the async method
+                                        .join() // Ensure we wait for the async method to complete
+                        , customPool))
+                .toList();*/
+
+        // Process branches in parallel with better chaining
+        /*List<CompletableFuture<Void>> futures = allBranchIds.stream()
+                .map(branchId -> CompletableFuture.supplyAsync(() -> branchService.processBranchAsync(branchId, searchKey), customPool)
+                        .thenCompose(f -> f)) // Ensures complete async execution
+                .toList();*/
+
+
+        /*List<CompletableFuture<Void>> futures = allBranchIds.parallelStream()
+                .map(branchId -> CompletableFuture.supplyAsync(() -> branchService.processBranchAsync(branchId, searchKey))
+                        .thenCompose(f -> f))
+                .toList();
+        // Wait for all tasks to complete
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();*/
+
+        ForkJoinPool customPools = new ForkJoinPool(120); // Larger pool size
+        List<CompletableFuture<Void>> futures = allBranchIds.stream()
+                .map(branchId -> CompletableFuture.supplyAsync(() -> searchKey.length() == 1 ? branchService.processBranchSingleCharacterAsync(branchId, searchKey) : branchService.processBranchAsync(branchId, searchKey), customPools)
+                        .thenCompose(f -> f))
+                .toList();
+
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         // Update the search task with end time
